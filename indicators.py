@@ -26,3 +26,20 @@ def determine_trend(df):
     return trend
 
 
+def macd_decisions(macd):
+    buysell = []
+    is_above = -1
+    is_above = 1 if macd['MACD_12_26_9'][0] > macd['MACDs_12_26_9'][0] else 0
+    for i in range(1, len(macd)):
+        if macd['MACD_12_26_9'][i] > macd['MACDs_12_26_9'][i] and not is_above:
+            buysell.append('buy')
+            is_above = 1
+        elif macd['MACD_12_26_9'][i] < macd['MACDs_12_26_9'][i] and is_above:
+            buysell.append('sell')
+            is_above = 0
+        else:
+            buysell.append(None)
+    return buysell
+
+print(calculate_macd(df))
+
