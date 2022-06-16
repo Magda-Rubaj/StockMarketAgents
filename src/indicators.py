@@ -3,17 +3,12 @@ import pandas_ta as ta
 import yfinance as yf
 
 
-df = pd.DataFrame() 
-df = yf.Ticker("^gspc")
-df = df.history(start='2021-01-03', end='2021-03-10')
-
 def calculate_adx(df):
     return ta.adx(high=df['High'],low=df['Low'],close=df['Close'])
 
 
 def calculate_macd(df):
     return ta.macd(close=df['Close'])
-
 
 def determine_trend(df):
     adx = calculate_adx(df)
@@ -28,18 +23,28 @@ def determine_trend(df):
 
 def macd_decisions(macd):
     buysell = []
+    df2 = macd[33:].filter(['Date'], axis=1)
+    df2 = df2.assign(macd='NAN')
+    sliced = macd[33:]
+    df2 = sliced.filter(['Date'], axis=1)
     is_above = -1
-    is_above = 1 if macd['MACD_12_26_9'][0] > macd['MACDs_12_26_9'][0] else 0
-    for i in range(1, len(macd)):
-        if macd['MACD_12_26_9'][i] > macd['MACDs_12_26_9'][i] and not is_above:
+    is_above = 1 if sliced['MACD_12_26_9'][0] > sliced['MACDs_12_26_9'][0] else 0
+    for index, value in sliced.iterrows():
+        if value['MACD_12_26_9'] > value['MACDs_12_26_9'] and not is_above:
             buysell.append('buy')
             is_above = 1
-        elif macd['MACD_12_26_9'][i] < macd['MACDs_12_26_9'][i] and is_above:
+        elif value['MACD_12_26_9'] < value['MACDs_12_26_9'] and is_above:
             buysell.append('sell')
             is_above = 0
         else:
             buysell.append(None)
-    return buysell
+    df2['macd'] = buysell
+    return df2
 
-print(calculate_macd(df))
+def make_decisions_table(df):
+    macd  = calculate_macd(df)
+    table = macd_decisions(macd)
+    table['price'] = df['Close']
+    return table
+
 
