@@ -38,7 +38,6 @@ def determine_stochastic(df):
             values.append("overbought")
         else:
             values.append(None)
-    print(stochastic)
     return values
 
 
@@ -70,6 +69,5 @@ def make_decisions_table(df):
     table['trend'] = adx
     table['stochastic'] = stochastic
     table['price'] = df['Close']
-    print(table)
 
     return table
