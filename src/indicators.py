@@ -6,6 +6,8 @@ import yfinance as yf
 def calculate_adx(df):
     return ta.adx(high=df['High'], low=df['Low'], close=df['Close'])
 
+def calculate_rsi(df):
+    pass
 
 def calculate_macd(df):
     return ta.macd(close=df['Close'])
