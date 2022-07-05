@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import Literal
+import random
 from indicators import make_decisions_table
 from datetime import datetime
 import yfinance as yf
@@ -10,7 +11,7 @@ import pandas as pd
 def calculate_df(symbol):
     df = pd.DataFrame()
     df = yf.Ticker(symbol)
-    df = df.history(start='2021-10-03', end='2022-01-05', interval="1h")
+    df = df.history(start='2022-01-01', end='2022-06-30', interval="1h")
     return df
 
 
@@ -50,12 +51,15 @@ class DecisionAgent:
     
     def close_position(self, current_price):
         self.budget = self.calculate_return(current_price)
-        print(self.position, self.budget)
         self.position = None
+        return "closed"
     
-    def open_position(self, price, type):
+    def open_position(self, price, type, symbol):
+        if self.position:
+            return
+
         self.position = Position(
-            symbol="^gspc",
+            symbol=symbol,
             number=self.calculate_shares(price),
             type=type,
             opening_price=price
@@ -66,31 +70,41 @@ class DecisionAgent:
             self.sell_signal = False
         return "opened"
 
-    def check_buy(self, value):
+    def check_buy(self, value, symbol=None):
         if value['macd'] == 'buy':
+            if self.position and self.position.type == 'sell':
+                return "close"
             self.buy_signal = True
 
         if self.buy_signal and value['stochastic'] == "oversold":
-            if self.position and self.position.type == 'sell':
-                self.close_position(value['price'],)
-                return "closed"
-            return self.open_position(value['price'], 'buy')
+            return "open"
+    
+    def buy(self, value, symbol=None):
+        if self.check_buy(value, symbol) == 'close':
+            return self.close_position(value['price'])
+        if self.check_buy(value, symbol) == 'open':
+            return self.open_position(value['price'], 'buy', symbol)
+    
+    def sell(self, value, symbol=None):
+        if self.check_sell(value, symbol) == 'close':
+            return self.close_position(value['price'])
+        if self.check_sell(value, symbol) == 'open':
+            return self.open_position(value['price'], 'sell', symbol)
 
-    def check_sell(self, value):
+
+    def check_sell(self, value, symbol=None):
         if value['macd'] == 'sell':
+            if self.position and self.position.type == 'buy':
+                return "close"
             self.sell_signal = True
 
         if self.sell_signal and value['stochastic'] == "overbought":
-            if self.position and self.position.type == 'buy':
-                self.close_position(value['price'])
-                return "closed"
-            return self.open_position(value['price'], 'sell')
+            return "open"
     
     def stop_loss(self, value):
-        if self.calculate_return(value['price']) / self.budget < 0.8:
-            print(self.budget, self.calculate_return(value['price']) / self.budget)
-            self.close_position(value['price'])
-            return "closed"
+        returned = self.calculate_return(value['price'])
+        if returned and (returned / self.budget < 0.85):
+            return self.close_position(value['price'])
 
 
 class Simulator:
@@ -99,28 +113,33 @@ class Simulator:
         self.chosen_stock = None
         self.budget = 10000
     
-    def chose_stock(self, df_dict, agent):
+    def chose_stock(self, df_dict, start):
         lnt = len(df_dict["^gspc"])
-        for i in range(lnt):
+        #start = start + 1 if (start < lnt - 10) else start
+        for i in range(start+1, lnt):
             for k, v in df_dict.items():
-                if agent.check_sell(v.iloc[i]) == "opened" or agent.check_buy(v.iloc[i]) == "opened":
-                    self.chosen_stock = k
-                    return
+                try:
+                    if v.iloc[i]['macd'] in ['sell', 'buy']:
+                        self.chosen_stock = k
+                        print(k)
+                        return
+                except IndexError:
+                    break
 
     def simulate(self):
         agent = DecisionAgent()
-        possibilities = ["^gspc", "fb", "tsla"]
+        possibilities = ["fb", "^gspc", "tsla"]
         df_dict = {p: make_decisions_table(calculate_df(p)) for p in possibilities}
 
-        self.chose_stock(df_dict, agent)
+        self.chose_stock(df_dict, 0)
         lnt = len(df_dict["^gspc"])
         for i in range(lnt):
-            if (agent.check_buy(
-                df_dict[self.chosen_stock].iloc[i]) == "closed" 
-                or agent.check_sell(df_dict[self.chosen_stock].iloc[i]) == "closed"
-                #or agent.stop_loss(df_dict[self.chosen_stock].iloc[i]) == "closed"
+            if (
+                agent.buy(df_dict[self.chosen_stock].iloc[i], self.chosen_stock) == "closed" 
+                or agent.sell(df_dict[self.chosen_stock].iloc[i], self.chosen_stock) == "closed"
+                or agent.stop_loss(df_dict[self.chosen_stock].iloc[i]) == "closed"
             ):
-                self.chose_stock(df_dict, agent)
+                self.chose_stock(df_dict, i)
         print(agent.budget)
 
 
