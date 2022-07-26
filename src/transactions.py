@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Literal
 import random
-from indicators import make_decisions_table
+from indicators import make_decisions_table, RSIEMACrossoverStrategy
 from datetime import datetime
 import yfinance as yf
 import pandas as pd
@@ -11,7 +11,7 @@ import pandas as pd
 def calculate_df(symbol):
     df = pd.DataFrame()
     df = yf.Ticker(symbol)
-    df = df.history(start='2022-01-01', end='2022-06-30', interval="1h")
+    df = df.history(start='2022-06-01', end='2022-07-22', interval="5m", back_adjust=True)
     return df
 
 
@@ -30,7 +30,8 @@ class Portfolio:
 
 class DecisionAgent:
 
-    def __init__(self):
+    def __init__(self, strategy: RSIEMACrossoverStrategy = RSIEMACrossoverStrategy()):
+        self.strategy = strategy
         self.buy_signal = False
         self.sell_signal = False
         self.position = None
@@ -64,43 +65,30 @@ class DecisionAgent:
             type=type,
             opening_price=price
         )
-        if type == 'buy':
-            self.buy_signal = False
-        elif type == 'sell':
-            self.sell_signal = False
-        return "opened"
-
-    def check_buy(self, value, symbol=None):
-        if value['macd'] == 'buy':
-            if self.position and self.position.type == 'sell':
-                return "close"
-            self.buy_signal = True
-
-        if self.buy_signal and value['stochastic'] == "oversold":
-            return "open"
     
-    def buy(self, value, symbol=None):
-        if self.check_buy(value, symbol) == 'close':
-            return self.close_position(value['price'])
-        if self.check_buy(value, symbol) == 'open':
-            return self.open_position(value['price'], 'buy', symbol)
-    
-    def sell(self, value, symbol=None):
-        if self.check_sell(value, symbol) == 'close':
-            return self.close_position(value['price'])
-        if self.check_sell(value, symbol) == 'open':
-            return self.open_position(value['price'], 'sell', symbol)
+    def action(self, value, stock):
+        action = self.strategy.execute(value["price"], value["ema"])
+        if self.position:
+            if self.position.type == "sell" and action == "buy":
+                self.close_position(value["price"])
+                self.open_position(value["price"], "buy", stock)
+                print("OPENED BUY CLOSED SELL")
+            
+            elif self.position.type == "buy" and action == "sell":
+                self.close_position(value["price"])
+                self.open_position(value["price"], "sell", stock)
+                print("OPENED SELL CLOSED BUY")
+        else:
+            if action == "buy":
+                self.open_position(value["price"], "buy", stock)
+                print("OPENED BUY")
+            elif action == "sell":
+                self.open_position(value["price"], "sell", stock)
+                print("OPENED SELL")
+        print(value)
+        print(self.budget)
 
 
-    def check_sell(self, value, symbol=None):
-        if value['macd'] == 'sell':
-            if self.position and self.position.type == 'buy':
-                return "close"
-            self.sell_signal = True
-
-        if self.sell_signal and value['stochastic'] == "overbought":
-            return "open"
-    
     def stop_loss(self, value):
         returned = self.calculate_return(value['price'])
         if returned and (returned / self.budget < 0.85):
@@ -110,7 +98,7 @@ class DecisionAgent:
 class Simulator:
 
     def __init__(self):
-        self.chosen_stock = None
+        self.chosen_stock = "^gspc"
         self.budget = 10000
     
     def chose_stock(self, df_dict, start):
@@ -128,18 +116,20 @@ class Simulator:
 
     def simulate(self):
         agent = DecisionAgent()
-        possibilities = ["fb", "^gspc", "tsla"]
+        possibilities = ["^gspc"]
         df_dict = {p: make_decisions_table(calculate_df(p)) for p in possibilities}
-
-        self.chose_stock(df_dict, 0)
+        print(df_dict["^gspc"])
+        #self.chose_stock(df_dict, 0)
         lnt = len(df_dict["^gspc"])
-        for i in range(lnt):
-            if (
-                agent.buy(df_dict[self.chosen_stock].iloc[i], self.chosen_stock) == "closed" 
-                or agent.sell(df_dict[self.chosen_stock].iloc[i], self.chosen_stock) == "closed"
-                or agent.stop_loss(df_dict[self.chosen_stock].iloc[i]) == "closed"
-            ):
-                self.chose_stock(df_dict, i)
+        agent.strategy.first_value(df_dict[self.chosen_stock].iloc[0]["price"], df_dict[self.chosen_stock].iloc[0]["ema"])
+        for i in range(1, lnt):
+            agent.action(df_dict[self.chosen_stock].iloc[i], self.chosen_stock)
+            # if (
+            #     agent.buy(df_dict[self.chosen_stock].iloc[i], self.chosen_stock) == "closed" 
+            #     or agent.sell(df_dict[self.chosen_stock].iloc[i], self.chosen_stock) == "closed"
+            #     or agent.stop_loss(df_dict[self.chosen_stock].iloc[i]) == "closed"
+            # ):
+            #     self.chose_stock(df_dict, i)
         print(agent.budget)
 
 
