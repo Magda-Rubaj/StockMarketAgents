@@ -7,14 +7,6 @@ import yfinance as yf
 import pandas as pd
 
 
-
-def calculate_df(symbol):
-    df = pd.DataFrame()
-    df = yf.Ticker(symbol)
-    df = df.history(start='2022-06-01', end='2022-07-22', interval="5m", back_adjust=True)
-    return df
-
-
 @dataclass
 class Position:
     symbol: str
