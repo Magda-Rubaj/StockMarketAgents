@@ -36,8 +36,10 @@ class RSIEMACrossoverStrategy(AbstractStrategy):
 
 
 class MachineLearningStrategy(AbstractStrategy):
-    def __init__(self, train_X, train_y):
-        self.model = TimeSeriesForest(random_state=123).fit(train_X, train_y)
+    def __init__(self, data):
+        self.models = {}
+        for key, val in data:
+            self.models[key] = TimeSeriesForest(random_state=123).fit(val.get("train_X"), val.get("train_y"))
 
     def execute(self, value):
         prediction = self.model.predict([value])

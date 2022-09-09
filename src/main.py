@@ -24,11 +24,15 @@ class App:
         return agents
     
 
+    
+
     def main(self):
-        stock = "xom"
-        initial_df = get_initial_df(stock, "2016-08-01", "2022-08-01")
-        ml_df = self._get_ml_data(initial_df)
-        agents = self._init_agents(ml_df)
+        stocks = ["xom", "tsla", "^gspc", "btc"]
+        loop_data = {}
+        for stock in stocks:
+            initial_df = get_initial_df(stock, "2016-08-01", "2022-08-01")
+            loop_data[stock] = self._get_ml_data(initial_df)
+        agents = self._init_agents(loop_data)
         simulation = Simulation()
         simulation.simulate(ml_df.get("prices"), agents, stock)
 
