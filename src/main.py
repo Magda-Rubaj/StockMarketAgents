@@ -1,4 +1,4 @@
-from transactions import Agent, Simulation
+from transactions import Agent
 from strategies import MachineLearningStrategy
 from data import get_initial_df, get_ml_df
 
@@ -19,22 +19,21 @@ class App:
 
     def _init_agents(self, ml_data):
         agents = []
-        ml_strategy = MachineLearningStrategy(ml_data.get("X_train"), ml_data.get("y_train"))
-        agents.append(Agent(ml_strategy, ml_data.get("X_test")))
+        ml_strategy = MachineLearningStrategy(ml_data)
+        agents.append(Agent(ml_strategy, ml_data))
         return agents
     
 
-    
-
     def main(self):
-        stocks = ["xom", "tsla", "^gspc", "btc"]
+        stocks = ["xom", "tsla", "^gspc"]
         loop_data = {}
         for stock in stocks:
             initial_df = get_initial_df(stock, "2016-08-01", "2022-08-01")
             loop_data[stock] = self._get_ml_data(initial_df)
+        #print(loop_data)
         agents = self._init_agents(loop_data)
-        simulation = Simulation()
-        simulation.simulate(ml_df.get("prices"), agents, stock)
+        for agent in agents:
+            agent.simulate()
 
 if __name__ == "__main__":
     App().main()

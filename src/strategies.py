@@ -13,7 +13,7 @@ class RSIEMACrossoverStrategy(AbstractStrategy):
         #self.rsi_crossed = False
         self.ema_crossed = False
         self.is_above = -1
-    
+
     def first_value(self, value):
         self.is_above = 1 if value["price"] > value["ema"] else 0
 
@@ -38,8 +38,10 @@ class RSIEMACrossoverStrategy(AbstractStrategy):
 class MachineLearningStrategy(AbstractStrategy):
     def __init__(self, data):
         self.models = {}
-        for key, val in data:
-            self.models[key] = TimeSeriesForest(random_state=123).fit(val.get("train_X"), val.get("train_y"))
+        for key, val in data.items():
+            self.models[key] = TimeSeriesForest(random_state=123).fit(
+                val.get("X_train"), val.get("y_train")
+            )
 
     def execute(self, value):
         prediction = self.model.predict([value])

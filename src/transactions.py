@@ -17,9 +17,9 @@ class Portfolio:
 
 
 class Agent:
-    def __init__(self, strategy, decision_data, budget=10000):
+    def __init__(self, strategy, data, budget=10000):
         self.strategy = strategy
-        self.decision_data = decision_data
+        self.data = data
         self.position = None
         self.budget = budget
     
@@ -79,29 +79,16 @@ class Agent:
         returned = self.calculate_return(value['price'])
         if returned and (returned / self.budget < 0.85):
             return self.close_position(value['price'])
-
-
-class Simulation:
+        
     
-    # def chose_stock(self, df_dict, start):
-    #     lnt = len(df_dict["^gspc"])
-    #     #start = start + 1 if (start < lnt - 10) else start
-    #     for i in range(start+1, lnt):
-    #         for k, v in df_dict.items():
-    #             try:
-    #                 if v.iloc[i]['macd'] in ['sell', 'buy']:
-    #                     self.chosen_stock = k
-    #                     print(k)
-    #                     return
-    #             except IndexError:
-    #                 break
+    def simulate(self):
+        first_key = self.data.keys()[0]
+        princes_len = len(self.data[first_key]["prices"])
+        for i in range(princes_len):
+            for stock in self.data.keys():
+                self.action(stock.get("prices")[i], i, stock)
+        print(self.budget)
 
-    def simulate(self, prices, agents, stock):
-        print(len(prices))
-        for i in range(len(prices)):
-            for agent in agents:
-                agent.action(prices[i], i, stock)
-        print(agent.budget)
 
 
 
