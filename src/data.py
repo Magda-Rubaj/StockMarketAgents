@@ -1,5 +1,3 @@
-from turtle import color
-from torch import seed
 import yfinance as yf
 import pandas as pd
 from sklearn.svm import SVC
@@ -8,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn import metrics
-from statsmodels.tsa.arima.model import ARIMA
+#from statsmodels.tsa.arima.model import ARIMA
 from indicators import calculate_rsi, calculate_ema
 
 

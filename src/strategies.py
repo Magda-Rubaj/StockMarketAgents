@@ -43,8 +43,8 @@ class MachineLearningStrategy(AbstractStrategy):
                 val.get("X_train"), val.get("y_train")
             )
 
-    def execute(self, value):
-        prediction = self.model.predict([value])
+    def execute(self, input_data, stock):
+        prediction = self.models[stock].predict([input_data])
         if bool(prediction):
             return "buy"
         else:
