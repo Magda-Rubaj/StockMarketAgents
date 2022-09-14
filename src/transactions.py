@@ -20,33 +20,32 @@ class Agent:
     def __init__(self, strategy, data, budget=10000):
         self.strategy = strategy
         self.data = data
-        self.position = None
+        self.portfolio = {}
         self.budget = budget
     
     def calculate_shares(self, price):
         return round(self.budget / price / 4, 1)
     
-    def calculate_return(self, current_price):
-        if not self.position:
+    def calculate_return(self, current_price, symbol):
+        if not self.portfolio.get(symbol):
             return
-        if self.position.type == 'buy':
-            return self.budget + self.position.number * \
-                (current_price - self.position.opening_price)
-        elif self.position.type == 'sell':
-            return self.budget + self.position.number * \
-                (self.position.opening_price - current_price)
+        if self.portfolio.get(symbol).type == 'buy':
+            return self.budget + self.portfolio.get(symbol).number * \
+                (current_price - self.portfolio.get(symbol).opening_price)
+        elif self.portfolio.get(symbol).type == 'sell':
+            return self.budget + self.portfolio.get(symbol).number * \
+                (self.portfolio.get(symbol).opening_price - current_price)
     
-    def close_position(self, current_price):
-        self.budget = self.calculate_return(current_price)
-        self.position = None
+    def close_position(self, current_price, symbol):
+        self.budget = self.calculate_return(current_price, symbol)
+        self.portfolio[symbol] = None
         return "closed"
     
     def open_position(self, price, type, symbol):
-        print(price)
-        if self.position:
+        if self.portfolio.get(symbol):
             return
 
-        self.position = Position(
+        self.portfolio[symbol] = Position(
             symbol=symbol,
             number=self.calculate_shares(price),
             type=type,
@@ -55,14 +54,14 @@ class Agent:
     
     def action(self, value, stock):
         action = self.strategy.execute(value.get("input_data"), stock)
-        if self.position:
-            if self.position.type == "sell" and action == "buy":
-                self.close_position(value.get("price"))
+        if self.portfolio.get(stock):
+            if self.portfolio.get(stock).type == "sell" and action == "buy":
+                self.close_position(value.get("price"), stock)
                 self.open_position(value.get("price"), "buy", stock)
                 print("OPENED BUY CLOSED SELL")
             
-            elif self.position.type == "buy" and action == "sell":
-                self.close_position(value.get("price"))
+            elif self.portfolio.get(stock).type == "buy" and action == "sell":
+                self.close_position(value.get("price"), stock)
                 self.open_position(value.get("price"), "sell", stock)
                 print("OPENED SELL CLOSED BUY")
         else:
