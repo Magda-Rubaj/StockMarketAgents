@@ -1,6 +1,6 @@
 from transactions import Agent
-from strategies import MachineLearningStrategy, ARIMAStrategy
-from data import get_initial_df, get_ml_df
+from strategies import MachineLearningStrategy, ARIMAStrategy, EMACrossoverStrategy
+from data import get_initial_df, get_ml_df, get_ema_df
 
 class App:
     
@@ -24,14 +24,17 @@ class App:
         agents = []
         loop_data = {}
         train_data = {}
+        ema_loop = {}
         for stock in stocks:
             initial_df = get_initial_df(stock, "2020-08-01", "2022-08-01")
             ml_data = self._get_ml_data(initial_df)
             loop_data[stock] = ml_data[1]
             train_data[stock] = ml_data[0]
+            ema_loop[stock] = get_ema_df(initial_df)
         #ml_strategy = MachineLearningStrategy(train_data)
-        strategy = ARIMAStrategy(train_data)
-        agents.append(Agent(strategy, loop_data))
+        #strategy = ARIMAStrategy(train_data)
+        strategy = EMACrossoverStrategy(ema_loop, stocks)
+        agents.append(Agent(strategy, ema_loop))
         return agents
     
 

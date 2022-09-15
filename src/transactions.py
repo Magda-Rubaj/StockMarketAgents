@@ -48,7 +48,7 @@ class Agent:
         )
     
     def action(self, value, stock):
-        action = self.strategy.execute(value.get("price"), stock)
+        action = self.strategy.execute(value, stock)
         if self.portfolio.get(stock):
             if self.portfolio.get(stock).type == "sell" and action == "buy":
                 self.close_position(value.get("price"), stock)
@@ -81,7 +81,7 @@ class Agent:
         for i in range(data_len):
             for stock in self.data.keys():
                 data = self.data[stock]
-                self.action(data[i], stock)
+                self.action(data.iloc[i], stock)
         print(self.budget)
 
 

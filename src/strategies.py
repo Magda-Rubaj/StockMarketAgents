@@ -9,31 +9,31 @@ class BaseStrategy(ABC):
         raise NotImplementedError
 
 
-class RSIEMACrossoverStrategy(BaseStrategy):
-    def __init__(self):
+class EMACrossoverStrategy(BaseStrategy):
+    def __init__(self, data, stocks):
         #self.rsi_crossed = False
         self.ema_crossed = False
-        self.is_above = -1
+        self.is_above = {}
+        for stock in stocks:
+            self.is_above[stock] = 1 if data[stock].iloc[0]["ema10"] > data[stock].iloc[0]["ema50"] else 0
 
-    def first_value(self, value):
-        self.is_above = 1 if value["price"] > value["ema"] else 0
-
-    def buy_condition(self, price, ema):
-        if price > ema and not self.is_above:
+    def buy_condition(self, value, stock):
+        if value["ema10"] > value["ema50"] and not self.is_above[stock]:
             self.ema_crossed = True
-            self.is_above = 1
+            self.is_above[stock]= 1
             return "buy"
         return False
 
-    def sell_condition(self, value):
-        if value["price"] < value["ema"] and self.is_above:
+    def sell_condition(self, value, stock):
+        if value["ema10"] < value["ema50"] and self.is_above[stock]:
             self.ema_crossed = True
-            self.is_above = 0
+            self.is_above[stock] = 0
             return "sell"
         return False
 
-    def execute(self, input_data):
-        return self.buy_condition(input_data) or self.sell_condition(input_data["ema"])
+    def execute(self, input_data, stock):
+        print(input_data)
+        return self.buy_condition(input_data, stock) or self.sell_condition(input_data, stock)
 
 
 class MachineLearningStrategy(BaseStrategy):

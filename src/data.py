@@ -34,28 +34,12 @@ def get_ml_df(df, n):
     return X, y, df["Close"][n + 31:]
 
 
-def arima_pred(df):
-    split = int(0.8*len(df))
-    X = [x for x in df["rsi"]]
-    X_train = X[:len(df) - 10]
-    X_test = X[len(df) - 10:]
-    history = X_train.copy()
-    predictions = []
-    for t in range(len(X_test)):
-        model = ARIMA(history, order=(2,1,5))
-        fit = model.fit()
-        output = fit.forecast()
-        yhat = output[0]
-        predictions.append(yhat)
-        obs = X_test[t]
-        history.append(yhat)
-        print('predicted=%f, expected=%f' % (yhat, obs))
-    plt.plot(predictions)
-    plt.plot(X_test, color='red')
-    plt.title('TESLA Prices Prediction')
-    #plt.xlabel('Date')
-    #plt.ylabel('Prices')
-    #plt.xticks(np.arange(881,1259,50), df.Date[881:1259:50])
-    plt.legend()
-    plt.show()
+def get_ema_df(df):
+    df["ema50"] = calculate_ema(df, 50)
+    df["ema10"] = calculate_ema(df, 10)
+    df = df[50:]
+    df = df.reset_index(drop=True)
+    return df
+
+
 
