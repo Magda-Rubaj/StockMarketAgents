@@ -11,11 +11,6 @@ class Position:
     opening_price: float
 
 
-@dataclass
-class Portfolio:
-    positions_opened: Position
-
-
 class Agent:
     def __init__(self, strategy, data, budget=10000):
         self.strategy = strategy
@@ -53,7 +48,7 @@ class Agent:
         )
     
     def action(self, value, stock):
-        action = self.strategy.execute(value.get("input_data"), stock)
+        action = self.strategy.execute(value.get("price"), stock)
         if self.portfolio.get(stock):
             if self.portfolio.get(stock).type == "sell" and action == "buy":
                 self.close_position(value.get("price"), stock)

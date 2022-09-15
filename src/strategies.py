@@ -1,14 +1,15 @@
 from pyts.classification import TimeSeriesForest
+from statsmodels.tsa.arima.model import ARIMA
 from abc import ABC, abstractmethod
 
 
-class AbstractStrategy(ABC):
+class BaseStrategy(ABC):
     @abstractmethod
-    def execute(value):
+    def execute(self, input_data):
         raise NotImplementedError
 
 
-class RSIEMACrossoverStrategy(AbstractStrategy):
+class RSIEMACrossoverStrategy(BaseStrategy):
     def __init__(self):
         #self.rsi_crossed = False
         self.ema_crossed = False
@@ -31,11 +32,11 @@ class RSIEMACrossoverStrategy(AbstractStrategy):
             return "sell"
         return False
 
-    def execute(self, value):
-        return self.buy_condition(value) or self.sell_condition(value["ema"])
+    def execute(self, input_data):
+        return self.buy_condition(input_data) or self.sell_condition(input_data["ema"])
 
 
-class MachineLearningStrategy(AbstractStrategy):
+class MachineLearningStrategy(BaseStrategy):
     def __init__(self, data):
         self.models = {}
         for key, val in data.items():
@@ -46,6 +47,24 @@ class MachineLearningStrategy(AbstractStrategy):
     def execute(self, input_data, stock):
         prediction = self.models[stock].predict([input_data])
         if bool(prediction):
+            return "buy"
+        else:
+            return "sell"
+
+
+class ARIMAStrategy(BaseStrategy):
+    def __init__(self, data):
+        self.models = {}
+        self.data = {}
+        for key, val in data.items():
+            self.models[key] = ARIMA(list(val.get("prices")), order=(0,1,2)).fit()
+            self.data[key] = list(val.get("prices"))
+
+    def execute(self, input_data, stock):
+        output = self.models[stock].forecast()[0]
+        self.data[stock].append(input_data)
+        self.models[stock] = ARIMA(self.data[stock], order=(0,1,2)).fit()
+        if output > input_data:
             return "buy"
         else:
             return "sell"
