@@ -38,8 +38,13 @@ def get_ema_df(df):
     df["ema50"] = calculate_ema(df, 50)
     df["ema10"] = calculate_ema(df, 10)
     df = df[50:]
+    prices = df["Close"]
     df = df.reset_index(drop=True)
-    return df
+    loop_data = [{
+        "input_data": df.iloc[i],
+        "price": prices[i]
+    } for i in range(len(prices))]
+    return loop_data
 
 
 

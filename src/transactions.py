@@ -81,7 +81,7 @@ class Agent:
         for i in range(data_len):
             for stock in self.data.keys():
                 data = self.data[stock]
-                self.action(data.iloc[i], stock)
+                self.action(data[i], stock)
         print(self.budget)
 
 

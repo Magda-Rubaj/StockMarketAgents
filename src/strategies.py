@@ -15,9 +15,10 @@ class EMACrossoverStrategy(BaseStrategy):
         self.ema_crossed = False
         self.is_above = {}
         for stock in stocks:
-            self.is_above[stock] = 1 if data[stock].iloc[0]["ema10"] > data[stock].iloc[0]["ema50"] else 0
+            self.is_above[stock] = 1 if data[stock][0]["input_data"]["ema10"] > data[stock][0]["input_data"]["ema50"] else 0
 
     def buy_condition(self, value, stock):
+        value = value["input_data"]
         if value["ema10"] > value["ema50"] and not self.is_above[stock]:
             self.ema_crossed = True
             self.is_above[stock]= 1
@@ -25,6 +26,7 @@ class EMACrossoverStrategy(BaseStrategy):
         return False
 
     def sell_condition(self, value, stock):
+        value = value["input_data"]
         if value["ema10"] < value["ema50"] and self.is_above[stock]:
             self.ema_crossed = True
             self.is_above[stock] = 0
@@ -32,7 +34,6 @@ class EMACrossoverStrategy(BaseStrategy):
         return False
 
     def execute(self, input_data, stock):
-        print(input_data)
         return self.buy_condition(input_data, stock) or self.sell_condition(input_data, stock)
 
 
