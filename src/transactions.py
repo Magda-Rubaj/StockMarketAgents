@@ -12,7 +12,8 @@ class Position:
 
 
 class Agent:
-    def __init__(self, strategy, data, budget=10000):
+    def __init__(self, strategy, data, name, budget=10000):
+        self.name = name
         self.strategy = strategy
         self.data = data
         self.portfolio = {}
@@ -53,20 +54,19 @@ class Agent:
             if self.portfolio.get(stock).type == "sell" and action == "buy":
                 self.close_position(value.get("price"), stock)
                 self.open_position(value.get("price"), "buy", stock)
-                print("OPENED BUY CLOSED SELL")
+                #print("OPENED BUY CLOSED SELL")
             
             elif self.portfolio.get(stock).type == "buy" and action == "sell":
                 self.close_position(value.get("price"), stock)
                 self.open_position(value.get("price"), "sell", stock)
-                print("OPENED SELL CLOSED BUY")
+                #print("OPENED SELL CLOSED BUY")
         else:
             if action == "buy":
                 self.open_position(value.get("price"), "buy", stock)
-                print("OPENED BUY")
+                #print("OPENED BUY")
             elif action == "sell":
                 self.open_position(value.get("price"), "sell", stock)
-                print("OPENED SELL")
-        print(self.budget)
+                #print("OPENED SELL")
 
 
     def check_stop_loss(self, value):

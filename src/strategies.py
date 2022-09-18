@@ -46,7 +46,7 @@ class MachineLearningStrategy(BaseStrategy):
             )
 
     def execute(self, input_data, stock):
-        prediction = self.models[stock].predict([input_data])
+        prediction = self.models[stock].predict([input_data.get("input_data")])
         if bool(prediction):
             return "buy"
         else:
@@ -63,9 +63,9 @@ class ARIMAStrategy(BaseStrategy):
 
     def execute(self, input_data, stock):
         output = self.models[stock].forecast()[0]
-        self.data[stock].append(input_data)
+        self.data[stock].append(input_data.get("price"))
         self.models[stock] = ARIMA(self.data[stock], order=(0,1,2)).fit()
-        if output > input_data:
+        if output > input_data.get("price"):
             return "buy"
         else:
             return "sell"

@@ -1,40 +1,31 @@
 from transactions import Agent
 from strategies import MachineLearningStrategy, ARIMAStrategy, EMACrossoverStrategy
-from data import get_initial_df, get_ml_df, get_ema_df
+from data import get_initial_df, get_data
 
 class App:
-    
-    def _get_ml_data(self, initial_df):
-        X, y, prices = get_ml_df(initial_df, 20)
-        split = int(0.8*len(initial_df))
-        
-        train_data = {
-            "X_train": X[:split],
-            "y_train": y[:split],
-            "prices": prices[split:]
-        }
-        loop_data = [{
-            "input_data": X.iloc[i],
-            "price": prices[i]
-        } for i in range(len(prices[split:]))]
-        return train_data, loop_data
-
 
     def _init_agents(self, stocks):
         agents = []
-        loop_data = {}
-        train_data = {}
-        ema_loop = {}
+
+        arima_data = {}
+        arima_train = {}
+
+        ml_data = {}
+        ml_train = {}
+
+        ema_data = {}
+
         for stock in stocks:
-            initial_df = get_initial_df(stock, "2020-08-01", "2022-08-01")
-            ml_data = self._get_ml_data(initial_df)
-            loop_data[stock] = ml_data[1]
-            train_data[stock] = ml_data[0]
-            ema_loop[stock] = get_ema_df(initial_df)
-        #ml_strategy = MachineLearningStrategy(train_data)
-        #strategy = ARIMAStrategy(train_data)
-        strategy = EMACrossoverStrategy(ema_loop, stocks)
-        agents.append(Agent(strategy, ema_loop))
+            initial_df = get_initial_df(stock, "2016-08-01", "2022-09-01")
+            ml_train[stock], ml_data[stock] = get_data(initial_df, "ml")
+            ema_data[stock] = get_data(initial_df,"ema")
+            arima_train[stock], arima_data[stock] = get_data(initial_df,"arima")
+        ml_strategy = MachineLearningStrategy(ml_train)
+        arima_strategy = ARIMAStrategy(arima_train)
+        ema_strategy = EMACrossoverStrategy(ema_data, stocks)
+        agents.append(Agent(ml_strategy, ml_data, "ML"))
+        agents.append(Agent(ema_strategy, ema_data, "EMA"))
+        agents.append(Agent(arima_strategy, arima_data, "ARIMA"))
         return agents
     
 
@@ -43,6 +34,7 @@ class App:
         agents = self._init_agents(stocks)
         for agent in agents:
             agent.simulate()
+            print(agent.name)
 
 if __name__ == "__main__":
     App().main()
