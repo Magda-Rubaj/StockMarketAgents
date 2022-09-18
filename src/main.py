@@ -1,9 +1,19 @@
-from transactions import Agent
-import random 
-from strategies import MachineLearningStrategy, ARIMAStrategy, EMACrossoverStrategy
-from data import get_initial_df, get_data
+import argparse
+import random
+
+from data import get_data, get_initial_df
+from strategies import (ARIMAStrategy, EMACrossoverStrategy,
+                        MachineLearningStrategy)
+from agents import Agent
+
 
 class App:
+    def add_args(self):
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--start-date", required=True)
+        parser.add_argument("--end-date", required=True)
+        parser.add_argument("--stocks-number")
+        self.args = parser.parse_args()
 
     def _init_agents(self, stocks):
         agents = []
@@ -17,7 +27,7 @@ class App:
         ema_data = {}
 
         for stock in stocks:
-            initial_df = get_initial_df(stock, "2016-08-01", "2022-09-01")
+            initial_df = get_initial_df(stock, self.args.start_date, self.args.end_date)
             ml_train[stock], ml_data[stock] = get_data(initial_df, "ml")
             ema_data[stock] = get_data(initial_df,"ema")
             arima_train[stock], arima_data[stock] = get_data(initial_df,"arima")
@@ -32,11 +42,13 @@ class App:
 
     def main(self):
         possible_stocks = ["xom", "tsla", "^gspc", "cl=f", "tlt", "ko", "amzn", "fdx"]
-        stocks = random.sample(possible_stocks, 3)
+        stocks = random.sample(possible_stocks, int(self.args.stocks_number))
         agents = self._init_agents(stocks)
         for agent in agents:
             agent.simulate()
             print(agent.name)
 
 if __name__ == "__main__":
-    App().main()
+    app = App()
+    app.add_args()
+    app.main()

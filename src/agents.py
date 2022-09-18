@@ -20,7 +20,7 @@ class Agent:
         self.budget = budget
     
     def calculate_shares(self, price):
-        return round(self.budget / price / 4, 1)
+        return round(self.budget / price / len(list(self.data.keys())), 1)
     
     def calculate_return(self, current_price, symbol):
         if not self.portfolio.get(symbol):
