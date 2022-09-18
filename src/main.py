@@ -1,4 +1,5 @@
 from transactions import Agent
+import random 
 from strategies import MachineLearningStrategy, ARIMAStrategy, EMACrossoverStrategy
 from data import get_initial_df, get_data
 
@@ -30,7 +31,8 @@ class App:
     
 
     def main(self):
-        stocks = ["xom", "tsla", "^gspc"]
+        possible_stocks = ["xom", "tsla", "^gspc", "cl=f", "tlt", "ko", "amzn", "fdx"]
+        stocks = random.sample(possible_stocks, 3)
         agents = self._init_agents(stocks)
         for agent in agents:
             agent.simulate()
