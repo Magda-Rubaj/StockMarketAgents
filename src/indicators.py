@@ -9,6 +9,9 @@ def calculate_adx(df):
 def calculate_ema(df, period):
     return ta.ema(df["Close"], length=period)
 
+def calculate_hma(df, period):
+    return ta.hma(df["Close"], length=period)
+
 def calculate_rsi(df, period):
     return ta.rsi(close=df['Close'], length=period)
 

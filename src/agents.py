@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import Literal
+import pandas as pd
 
 
 
@@ -25,6 +26,7 @@ class Agent:
     def calculate_return(self, current_price, symbol):
         if not self.portfolio.get(symbol):
             return
+        print(current_price)
         if self.portfolio.get(symbol).type == 'buy':
             return self.budget + self.portfolio.get(symbol).number * \
                 (current_price - self.portfolio.get(symbol).opening_price)
@@ -50,6 +52,8 @@ class Agent:
     
     def action(self, value, stock):
         action = self.strategy.execute(value, stock)
+        if pd.isna(value.get("price")):
+            return
         if self.portfolio.get(stock):
             if self.portfolio.get(stock).type == "sell" and action == "buy":
                 self.close_position(value.get("price"), stock)
@@ -67,7 +71,6 @@ class Agent:
             elif action == "sell":
                 self.open_position(value.get("price"), "sell", stock)
                 #print("OPENED SELL")
-
 
     def check_stop_loss(self, value):
         returned = self.calculate_return(value.get("price"))

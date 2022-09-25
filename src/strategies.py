@@ -1,6 +1,7 @@
 from pyts.classification import TimeSeriesForest
 from statsmodels.tsa.arima.model import ARIMA
 from abc import ABC, abstractmethod
+import pandas as pd
 
 
 class BaseStrategy(ABC):
@@ -56,6 +57,7 @@ class MachineLearningStrategy(BaseStrategy):
 class ARIMAStrategy(BaseStrategy):
     def __init__(self, data):
         self.models = {}
+        self.trend = {}
         self.data = {}
         for key, val in data.items():
             self.models[key] = ARIMA(list(val.get("prices")), order=(0,1,2)).fit()
