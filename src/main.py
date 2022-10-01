@@ -35,13 +35,13 @@ class App:
         arima_strategy = ARIMAStrategy(arima_train)
         ema_strategy = EMACrossoverStrategy(ema_data, stocks)
         agents.append(Agent(ml_strategy, ml_data, "ML"))
-        #agents.append(Agent(ema_strategy, ema_data, "EMA"))
-        #agents.append(Agent(arima_strategy, arima_data, "ARIMA"))
+        agents.append(Agent(ema_strategy, ema_data, "EMA"))
+        agents.append(Agent(arima_strategy, arima_data, "ARIMA"))
         return agents
     
 
     def main(self):
-        possible_stocks = ["tsla", "amzn", "fdx"]#"xom", "tlt", "ko", "amzn", "fdx"]
+        possible_stocks = ["tsla", "amzn", "fdx", "amd", "nvda", "ko"]
         stocks = random.sample(possible_stocks, int(self.args.stocks_number))
         agents = self._init_agents(stocks)
         for agent in agents:

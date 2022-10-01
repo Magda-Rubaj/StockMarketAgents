@@ -47,10 +47,10 @@ def get_ml_df(df, n):
 
 
 def get_ema_data(df, minimal_index):
-    df["ema50"] = calculate_ema(df, 200)
+    df["ema50"] = calculate_ema(df, 50)
     df["ema10"] = calculate_ema(df, 10)
     df = df[50:]
-    df = df[minimal_index:]
+    df = df[minimal_index - 50:]
     df = df.reset_index(drop=True)
     prices = df["Close"]
     loop_data = [{
@@ -88,7 +88,7 @@ def get_arima_data(df, minimal_index):
 
 def get_data(initial_df, data_type):
     ml_df = get_ml_df(initial_df, 20)
-    split = int(0.8*len(ml_df))
+    split = int(0.7*len(ml_df))
     minimal_index = len(initial_df) - len(ml_df)
     cropped_df = initial_df[minimal_index:]
     cropped_df = cropped_df.reset_index(drop=True)

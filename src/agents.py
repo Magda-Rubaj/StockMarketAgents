@@ -26,7 +26,6 @@ class Agent:
     def calculate_return(self, current_price, symbol):
         if not self.portfolio.get(symbol):
             return
-        print(current_price)
         if self.portfolio.get(symbol).type == 'buy':
             return self.budget + self.portfolio.get(symbol).number * \
                 (current_price - self.portfolio.get(symbol).opening_price)
@@ -84,7 +83,10 @@ class Agent:
         for i in range(data_len):
             for stock in self.data.keys():
                 data = self.data[stock]
-                self.action(data[i], stock)
+                try:
+                    self.action(data[i], stock)
+                except IndexError:
+                    pass
         print(self.budget)
 
 
