@@ -1,9 +1,8 @@
 import yfinance as yf
 import pandas as pd
-import numpy as np
 from dateutil.parser import parse
 from sklearn.impute import SimpleImputer
-from indicators import calculate_rsi, calculate_ema, calculate_hma
+from indicators import calculate_rsi, calculate_ema
 
 
 def get_initial_df(symbol, start, end):

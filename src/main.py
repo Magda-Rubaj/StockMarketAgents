@@ -45,8 +45,9 @@ class App:
         stocks = random.sample(possible_stocks, int(self.args.stocks_number))
         agents = self._init_agents(stocks)
         for agent in agents:
+            print(f"{agent.name} starting simulation...")
             agent.simulate()
-            print(agent.name)
+            print(f"{agent.name} final budget: {agent.budget}")
 
 if __name__ == "__main__":
     app = App()
