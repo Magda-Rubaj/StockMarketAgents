@@ -2,13 +2,15 @@ import argparse
 import random
 from typing import List
 
+from agents import Agent
 from data import get_data, get_initial_df
+from logger import logger
 from strategies import (ARIMAStrategy, EMACrossoverStrategy,
                         MachineLearningStrategy)
-from agents import Agent
 
 
 class App:
+
     def add_args(self):
         parser = argparse.ArgumentParser()
         parser.add_argument("--start-date", required=True)
@@ -47,9 +49,9 @@ class App:
         stocks = random.sample(possible_stocks, int(self.args.stocks_number))
         agents = self._init_agents(stocks)
         for agent in agents:
-            print(f"{agent.name} starting simulation...")
+            logger.info(f"{agent.name} starting simulation...")
             agent.simulate()
-            print(f"{agent.name} final budget: {agent.budget}")
+            logger.info(f"{agent.name} final budget: {agent.budget}")
 
 if __name__ == "__main__":
     app = App()

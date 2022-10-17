@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from strategies import Strategy
 from typing import Literal
+from logger import logger
 import pandas as pd
 
 
@@ -60,19 +61,19 @@ class Agent:
             if self.portfolio.get(stock).type == "sell" and action == "buy":
                 self.close_position(value.get("price"), stock)
                 self.open_position(value.get("price"), "buy", stock)
-                print(f"{self.name} OPENED BUY CLOSED SELL POSITION ON {stock}")
+                logger.info(f"{self.name} OPENED BUY CLOSED SELL POSITION ON {stock}")
 
             elif self.portfolio.get(stock).type == "buy" and action == "sell":
                 self.close_position(value.get("price"), stock)
                 self.open_position(value.get("price"), "sell", stock)
-                print(f"{self.name} OPENED SELL CLOSED BUY POSITION ON {stock}")
+                logger.info(f"{self.name} OPENED SELL CLOSED BUY POSITION ON {stock}")
         else:
             if action == "buy":
                 self.open_position(value.get("price"), "buy", stock)
-                print(f"{self.name} OPENED BUY")
+                logger.info(f"{self.name} OPENED BUY")
             elif action == "sell":
                 self.open_position(value.get("price"), "sell", stock)
-                print(f"{self.name} OPENED SELL")
+                logger.info(f"{self.name} OPENED SELL")
 
     def check_stop_loss(self, price: float, stock: str):
         returned = self.calculate_return(price, stock)
