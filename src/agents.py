@@ -60,12 +60,12 @@ class Agent:
             if self.portfolio.get(stock).type == "sell" and action == "buy":
                 self.close_position(value.get("price"), stock)
                 self.open_position(value.get("price"), "buy", stock)
-                print(f"{self.name} OPENED BUY CLOSED SELL POSITION ON{stock}")
+                print(f"{self.name} OPENED BUY CLOSED SELL POSITION ON {stock}")
 
             elif self.portfolio.get(stock).type == "buy" and action == "sell":
                 self.close_position(value.get("price"), stock)
                 self.open_position(value.get("price"), "sell", stock)
-                print(f"{self.name} OPENED SELL CLOSED BUY POSITION ON{stock}")
+                print(f"{self.name} OPENED SELL CLOSED BUY POSITION ON {stock}")
         else:
             if action == "buy":
                 self.open_position(value.get("price"), "buy", stock)

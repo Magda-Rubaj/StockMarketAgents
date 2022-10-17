@@ -22,11 +22,12 @@ def include_fundamentals(earnings: pd.DataFrame, df: pd.DataFrame) -> pd.DataFra
     return df
 
 
-def get_initial_df(symbol: str, start: str, end: str) -> pd.DataFrame:
+def get_initial_df(symbol: str, start: str, end: str, interval: str) -> pd.DataFrame:
     df = pd.DataFrame()
     df = yf.Ticker(symbol)
-    earnings = df.earnings_history
-    df = df.history(start=start, end=end, interval="1wk")
+    fundamental_intervals = ["1wk", "5d", "1mo"]
+    earnings = df.earnings_history if interval in fundamental_intervals else None
+    df = df.history(start=start, end=end, interval=interval)
     df = df.reset_index(drop=False)
     if earnings is not None:
         df = include_fundamentals(earnings, df)
@@ -86,7 +87,7 @@ def get_data(initial_df: pd.DataFrame, data_type: str):
     ml_df = get_ml_df(initial_df, 50)
     split = int(0.7 * len(ml_df))
     diff = len(initial_df) - len(ml_df)  # we want to have test data for all strategies having same length
-    minimal_index = 50 if diff < 50 else diff # since we calculate ema50
+    minimal_index = 50 if diff < 50 else diff  # since we calculate ema50
     cropped_df = initial_df[minimal_index:]
     cropped_df = cropped_df.reset_index(drop=True)
     prices = cropped_df["Close"]

@@ -13,6 +13,7 @@ class App:
         parser = argparse.ArgumentParser()
         parser.add_argument("--start-date", required=True)
         parser.add_argument("--end-date", required=True)
+        parser.add_argument("--interval", required=True, choices=["30m" ,"60m" ," 90m", "1h", "1d", "5d", "1wk", "1mo"])
         parser.add_argument("--stocks-number")
         self.args = parser.parse_args()
 
@@ -28,7 +29,7 @@ class App:
         ema_data = {}
 
         for stock in stocks:
-            initial_df = get_initial_df(stock, self.args.start_date, self.args.end_date)
+            initial_df = get_initial_df(stock, self.args.start_date, self.args.end_date, self.args.interval)
             ml_train[stock], ml_data[stock] = get_data(initial_df, "ml")
             ema_data[stock] = get_data(initial_df,"ema")
             arima_train[stock], arima_data[stock] = get_data(initial_df,"arima")
