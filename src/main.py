@@ -1,4 +1,5 @@
 import argparse
+import asyncio
 import random
 from typing import List
 
@@ -44,16 +45,15 @@ class App:
         return agents
     
 
-    def main(self):
+    async def main(self):
         possible_stocks = ["tsla", "amzn", "fdx", "amd", "nvda", "ko"]
         stocks = random.sample(possible_stocks, int(self.args.stocks_number))
         agents = self._init_agents(stocks)
-        for agent in agents:
-            logger.info(f"{agent.name} starting simulation...")
-            agent.simulate()
-            logger.info(f"{agent.name} final budget: {agent.budget}")
+        coroutines = [agent.simulate() for agent in agents]
+        results = await asyncio.gather(*coroutines)
+        
 
 if __name__ == "__main__":
     app = App()
     app.add_args()
-    app.main()
+    asyncio.run(app.main())

@@ -80,8 +80,10 @@ class Agent:
         if returned and (returned / self.budget < 0.85):
             self.close_position(price, stock)
 
-    def simulate(self):
+    async def simulate(self):
+        logger.info(f"{self.name} starting simulation...")
         for stock in self.data.keys():
             data = self.data[stock]
             for entry in data:
                 self.action(entry, stock)
+        logger.info(f"{self.name} final budget: {self.budget}")
