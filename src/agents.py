@@ -52,7 +52,7 @@ class Agent:
         )
 
     def action(self, value: dict, stock: str):
-        self.check_stop_loss(value.get("price"))
+        self.check_stop_loss(value.get("price"), stock)
         action = self.strategy.execute(value, stock)
         if pd.isna(value.get("price")):
             return
@@ -74,10 +74,10 @@ class Agent:
                 self.open_position(value.get("price"), "sell", stock)
                 print(f"{self.name} OPENED SELL")
 
-    def check_stop_loss(self, price: float):
-        returned = self.calculate_return(price)
+    def check_stop_loss(self, price: float, stock: str):
+        returned = self.calculate_return(price, stock)
         if returned and (returned / self.budget < 0.85):
-            self.close_position(price)
+            self.close_position(price, stock)
 
     def simulate(self):
         for stock in self.data.keys():

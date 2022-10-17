@@ -1,5 +1,6 @@
 import argparse
 import random
+from typing import List
 
 from data import get_data, get_initial_df
 from strategies import (ARIMAStrategy, EMACrossoverStrategy,
@@ -15,7 +16,7 @@ class App:
         parser.add_argument("--stocks-number")
         self.args = parser.parse_args()
 
-    def _init_agents(self, stocks):
+    def _init_agents(self, stocks: List[str]) -> List[Agent]:
         agents = []
 
         arima_data = {}
