@@ -20,5 +20,7 @@ def calculate_macd(df):
 
 def calculate_stochastic(df):
     return ta.stoch(high=df['High'], low=df['Low'], close=df['Close'])
-    
+
+def calculate_psl(df):
+    return ta.psl(close=df['Close'])
 

@@ -1,9 +1,12 @@
 from typing import List
+import os
 import yfinance as yf
+import numpy as np
 import pandas as pd
 from dateutil.parser import parse
 from sklearn.impute import SimpleImputer
-from indicators import calculate_rsi, calculate_ema
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from indicators import calculate_rsi, calculate_ema, calculate_psl
 
 
 def include_fundamentals(earnings: pd.DataFrame, df: pd.DataFrame) -> pd.DataFrame:
@@ -22,7 +25,7 @@ def include_fundamentals(earnings: pd.DataFrame, df: pd.DataFrame) -> pd.DataFra
     return df
 
 
-def get_initial_df(symbol: str, start: str, end: str, interval: str) -> pd.DataFrame:
+def get_df_from_api(symbol: str, start: str, end: str, interval: str) -> pd.DataFrame:
     df = pd.DataFrame()
     df = yf.Ticker(symbol)
     fundamental_intervals = ["1wk", "5d", "1mo"]
@@ -31,10 +34,32 @@ def get_initial_df(symbol: str, start: str, end: str, interval: str) -> pd.DataF
     df = df.reset_index(drop=False)
     if earnings is not None:
         df = include_fundamentals(earnings, df)
-    return df
+    df["Close"] = df["Close"].fillna(method="ffill")
+    idf.columns = df.columns
+    idf.index = df.index
+    return idf
 
 
-def get_ml_df(df: pd.DataFrame, n: int) -> pd.DataFrame:
+def get_svc_df(df: pd.DataFrame) -> pd.DataFrame:
+    df["rsi"] = calculate_rsi(df, 14)
+    df["psl"] = calculate_psl(df)
+    df2 = pd.DataFrame()
+    df2["volatility"] = df['Close'].pct_change(1)
+    df2["Close"] = df['Close']
+    df["diff"] = df["Close"].diff(periods=1)
+    df2["psl"] = df["psl"]
+    df2["rsi"] = df["rsi"]
+    for i in range(1, len(df)):
+        df2.loc[i, "diff"] = df.iloc[i-1]["diff"]
+        df2.loc[i, "up"] = 1 if df.iloc[i - 1]["Close"] < df.iloc[i]["Close"] else 0
+    df2 = df2[16:]
+    #df2 = df2.drop('Close', axis=1)
+    df2 = df2.reset_index(drop=True)
+    return df2
+
+
+def get_tsrf_df(df: pd.DataFrame, n: int, interval: str) -> pd.DataFrame:
+    fundamental_intervals = ["1wk", "5d", "1mo"]
     df["rsi"] = calculate_rsi(df, 14)
     df["ema50"] = calculate_ema(df, 50)
     df["ema10"] = calculate_ema(df, 20)
@@ -43,7 +68,8 @@ def get_ml_df(df: pd.DataFrame, n: int) -> pd.DataFrame:
         df2.loc[i, "momentum"] = df.iloc[i - 1]["Close"] - df.iloc[i - (n + 1)]["Close"]
         df2.loc[i, "rsi"] = df.iloc[i]["rsi"]
         df2.loc[i, "ema50"] = df.iloc[i]["ema50"]
-        df2.loc[i, "eps"] = df.iloc[i]["eps"]
+        if interval in fundamental_intervals:
+            df2.loc[i, "eps"] = df.iloc[i]["eps"]
         df2.loc[i, "up"] = 1 if df.iloc[i - 1]["Close"] < df.iloc[i]["Close"] else 0
     df2 = df2.reset_index()
     imp = SimpleImputer()
@@ -83,17 +109,19 @@ def get_arima_data(df: pd.DataFrame, minimal_index: int):
     return train_data, loop_data
 
 
-def get_data(initial_df: pd.DataFrame, data_type: str):
-    ml_df = get_ml_df(initial_df, 50)
-    split = int(0.7 * len(ml_df))
-    diff = len(initial_df) - len(ml_df)  # we want to have test data for all strategies having same length
+def get_data(initial_df: pd.DataFrame, data_type: str, interval: str = None):
+    svc_df = get_svc_df(initial_df)
+    tsrf_df = get_tsrf_df(initial_df, 50, interval)
+    split = int(0.7 * len(tsrf_df))
+    diff = len(initial_df) - len(tsrf_df)  # we want to have test data for all strategies having same length
     minimal_index = 50 if diff < 50 else diff  # since we calculate ema50
     cropped_df = initial_df[minimal_index:]
     cropped_df = cropped_df.reset_index(drop=True)
     prices = cropped_df["Close"]
     mapping = {
         "arima": get_arima_data(cropped_df, split),
-        "ml": get_ml_data(ml_df, split, prices),
+        "tsrf": get_ml_data(tsrf_df, split, prices),
+        "svc": get_ml_data(svc_df, split, prices),
         "ema": get_ema_data(initial_df, minimal_index + split),
     }
     return mapping.get(data_type)

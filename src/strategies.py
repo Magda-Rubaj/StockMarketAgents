@@ -1,5 +1,6 @@
 from typing import Literal
 from pyts.classification import TimeSeriesForest
+from sklearn.svm import SVC
 from statsmodels.tsa.arima.model import ARIMA
 from abc import ABC, abstractmethod
 import pandas as pd
@@ -43,7 +44,25 @@ class EMACrossoverStrategy(Strategy):
         )
 
 
-class MachineLearningStrategy(Strategy):
+class SVCStrategy(Strategy):
+    def __init__(self, data: dict):
+        self.models = {}
+        for key, val in data.items():
+            try:
+                self.models[key] = SVC(random_state=123).fit(
+                    val.get("X_train"), val.get("y_train")
+                )
+            except ValueError:
+                print(val.get("X_train"))
+
+    def execute(self, input_data: dict, stock: str) -> str:
+        prediction = self.models[stock].predict([input_data.get("input_data")])
+        if bool(prediction):
+            return "buy"
+        return "sell"
+
+
+class TSRFStrategy(Strategy):
     def __init__(self, data: dict):
         self.models = {}
         for key, val in data.items():
@@ -56,6 +75,7 @@ class MachineLearningStrategy(Strategy):
         if bool(prediction):
             return "buy"
         return "sell"
+
 
 
 class ARIMAStrategy(Strategy):
