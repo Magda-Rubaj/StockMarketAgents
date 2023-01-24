@@ -13,14 +13,14 @@ class Strategy(ABC):
 
 
 class EMACrossoverStrategy(Strategy):
-    def __init__(self, data: pd.DataFrame, stocks: dict):
+    def __init__(self, data: dict):
         self.ema_crossed = False
         self.is_above = {}
-        for stock in stocks:
-            self.is_above[stock] = (
+        for key, val in data.items():
+            self.is_above[key] = (
                 1
-                if data[stock][0]["input_data"]["ema10"]
-                > data[stock][0]["input_data"]["ema50"]
+                if val[0]["input_data"]["ema10"]
+                > val[0]["input_data"]["ema50"]
                 else 0
             )
 

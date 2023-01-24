@@ -54,7 +54,7 @@ class App:
         return agents
     
     def _init_agents_files(self):
-        intervals = ["1wk", "1d", "5d"]
+        intervals = ["1wk", "1d", "5d", "1h", "15m", "5m"]
         for interval in intervals:
             arima_data = {}
             arima_train = {}
@@ -68,7 +68,7 @@ class App:
             ema_data = {}
             files = [f for f in os.listdir('./csv')]
             files = [file for file in files if interval in file]
-            means = {"arima": 0, "svc": 0, "tsrf": 0}
+            means = {"arima": 0, "svc": 0, "tsrf": 0, "ema": 0}
             for file in files:
                 initial_df  = pd.read_csv(f"csv/{file}")
                 initial_df["Close"] = initial_df["Close"].fillna(method="ffill")
@@ -80,10 +80,10 @@ class App:
                 tsrf_strategy = TSRFStrategy(tsrf_train)
                 svc_strategy = SVCStrategy(svc_train)
                 arima_strategy = ARIMAStrategy(arima_train)
-                #ema_strategy = EMACrossoverStrategy(ema_data, stocks)
+                ema_strategy = EMACrossoverStrategy(ema_data)
                 means["tsrf"] += Agent(tsrf_strategy, tsrf_data, "TSRF").simulate()
                 means["svc"] += Agent(svc_strategy, svc_data, "SVC").simulate()
-                #agents.append(Agent(ema_strategy, ema_data, "EMA"))
+                means["ema"] += Agent(ema_strategy, ema_data, "EMA").simulate()
                 means["arima"] += Agent(arima_strategy, arima_data, "ARIMA").simulate()
             
             for key, val in means.items():

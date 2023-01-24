@@ -35,9 +35,7 @@ def get_df_from_api(symbol: str, start: str, end: str, interval: str) -> pd.Data
     if earnings is not None:
         df = include_fundamentals(earnings, df)
     df["Close"] = df["Close"].fillna(method="ffill")
-    idf.columns = df.columns
-    idf.index = df.index
-    return idf
+    return df
 
 
 def get_svc_df(df: pd.DataFrame) -> pd.DataFrame:
@@ -47,12 +45,14 @@ def get_svc_df(df: pd.DataFrame) -> pd.DataFrame:
     df2["volatility"] = df['Close'].pct_change(1)
     df2["Close"] = df['Close']
     df["diff"] = df["Close"].diff(periods=1)
-    df2["psl"] = df["psl"]
-    df2["rsi"] = df["rsi"]
+    # df2["psl"] = df["psl"]
+    # df2["rsi"] = df["rsi"]
     for i in range(1, len(df)):
         df2.loc[i, "diff"] = df.iloc[i-1]["diff"]
+        df2.loc[i, "rsi"] = df.iloc[i-1]["rsi"]
+        df2.loc[i, "psl"] = df.iloc[i-1]["psl"]
         df2.loc[i, "up"] = 1 if df.iloc[i - 1]["Close"] < df.iloc[i]["Close"] else 0
-    df2 = df2[16:]
+    df2 = df2[17:]
     #df2 = df2.drop('Close', axis=1)
     df2 = df2.reset_index(drop=True)
     return df2
@@ -122,6 +122,6 @@ def get_data(initial_df: pd.DataFrame, data_type: str, interval: str = None):
         "arima": get_arima_data(cropped_df, split),
         "tsrf": get_ml_data(tsrf_df, split, prices),
         "svc": get_ml_data(svc_df, split, prices),
-        "ema": get_ema_data(initial_df, minimal_index + split),
+        "ema": get_ema_data(cropped_df, split),
     }
     return mapping.get(data_type)
